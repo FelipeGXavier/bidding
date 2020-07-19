@@ -12,11 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UploadFileToDropbox {
@@ -26,25 +27,30 @@ public class UploadFileToDropbox {
     @Autowired
     private Environment env;
 
-    public UploadFileToDropbox(){
+    public UploadFileToDropbox() {
         this.client = new RestTemplate();
     }
 
-    public String uploadFileAndGetSharedLink(MultipartFile file, String name) throws IOException {
-        String path = this.uploadFile(file, name);
-        return this.getSharedLink(path);
+    public HashMap<String, String> uploadFileAndGetSharedLink(MultiValueMap<String, MultipartFile> body) throws IOException {
+        HashMap<String, String> uploadedFiles = new HashMap<>();
+        for (Map.Entry<String, List<MultipartFile>> entry : body.entrySet()) {
+            String path = this.uploadFile(entry.getValue().get(0), entry.getKey());
+            String sharedPath = this.getSharedLink(path);
+            uploadedFiles.put(entry.getKey(), sharedPath);
+        }
+        return uploadedFiles;
     }
 
     private String uploadFile(MultipartFile file, String name) throws IOException {
         DropboxApiArgPayload dropboxApiArgPayload = this.getPayloadUpload(file, name);
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization","Bearer " + this.env.getProperty("app.dropbox.env"));
-        headers.set("Dropbox-API-Arg",this.mapObjectToJsonPayload(dropboxApiArgPayload));
+        headers.set("Authorization", "Bearer " + this.env.getProperty("app.dropbox.env"));
+        headers.set("Dropbox-API-Arg", this.mapObjectToJsonPayload(dropboxApiArgPayload));
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         HttpEntity<byte[]> entity = new HttpEntity<>(file.getBytes(), headers);
         ResponseEntity<?> responseEntity = this.client.postForEntity("https://content.dropboxapi.com/2/files/upload", entity, DropboxUploadPayload.class);
         DropboxUploadPayload payload = (DropboxUploadPayload) responseEntity.getBody();
-        if (payload == null || responseEntity.getStatusCode() != HttpStatus.OK || !payload.isDownloadable()){
+        if (payload == null || responseEntity.getStatusCode() != HttpStatus.OK || !payload.isDownloadable()) {
             throw new RuntimeException("");
         }
         return dropboxApiArgPayload.getPath();
@@ -54,12 +60,12 @@ public class UploadFileToDropbox {
     private String getSharedLink(String path) throws JsonProcessingException {
         DropboxSettingsPayload dropboxSettings = this.getPayloadSharedLink(path);
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization","Bearer " + this.env.getProperty("app.dropbox.env"));
+        headers.set("Authorization", "Bearer " + this.env.getProperty("app.dropbox.env"));
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(this.mapObjectToJsonPayload(dropboxSettings), headers);
         ResponseEntity<?> responseEntity = this.client.postForEntity("https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings", entity, DropboxSharedLinkPayload.class);
         DropboxSharedLinkPayload payload = (DropboxSharedLinkPayload) responseEntity.getBody();
-        if (payload == null || responseEntity.getStatusCode() != HttpStatus.OK){
+        if (payload == null || responseEntity.getStatusCode() != HttpStatus.OK) {
             throw new RuntimeException("");
         }
         return payload.getUrl();
@@ -71,12 +77,12 @@ public class UploadFileToDropbox {
         return objectMapper.writeValueAsString(var1);
     }
 
-    private DropboxApiArgPayload getPayloadUpload(MultipartFile file, String name){
+    private DropboxApiArgPayload getPayloadUpload(MultipartFile file, String name) {
         String ext = FilenameUtils.getExtension(file.getOriginalFilename());
-        final String path = "/Apps/spring_bidding/"+name + "_" + UUID.randomUUID()
+        final String path = "/Apps/spring_bidding/" + name + "_" + UUID.randomUUID()
                 .toString()
-                .replace("-","_")
-                .substring(0,6) + "." + ext;
+                .replace("-", "_")
+                .substring(0, 6) + "." + ext;
         DropboxApiArgPayload dropboxApiArgPayload = new DropboxApiArgPayload();
         return dropboxApiArgPayload.setAutorename(true)
                 .setMode("add")
@@ -85,14 +91,13 @@ public class UploadFileToDropbox {
                 .setStrict_conflict(false);
     }
 
-    private DropboxSettingsPayload getPayloadSharedLink(String path){
+    private DropboxSettingsPayload getPayloadSharedLink(String path) {
         DropboxSettingsPayload dropboxSettings = new DropboxSettingsPayload();
         return dropboxSettings.setPath(path)
                 .setSettings(new DropboxSettingsDetails().setAccess("viewer")
-                .setAudience("public")
-                .setRequestVisibility("public"));
+                        .setAudience("public")
+                        .setRequestVisibility("public"));
     }
-
 
 
 }
