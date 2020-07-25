@@ -14,7 +14,6 @@ public class Modality {
     @Column(unique = true)
     private String description;
 
-
     public Modality(Long id, @NotNull String description) {
         this.id = id;
         this.description = description;

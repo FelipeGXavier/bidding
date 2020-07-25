@@ -1,10 +1,11 @@
 package com.licitacao.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,6 +22,7 @@ public class Bidding {
     @JsonFormat(pattern="dd-MM-yyyy HH:mm:ss")
     private LocalDateTime openingDate;
     @NotNull
+    @Size(min = 3, max = 500)
     private String object;
     @OneToOne
     private Modality modality;
