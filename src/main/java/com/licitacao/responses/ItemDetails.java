@@ -1,7 +1,5 @@
 package com.licitacao.responses;
 
-import com.licitacao.domain.ItemType;
-
 public class ItemDetails {
 
     private String description;

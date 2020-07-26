@@ -2,6 +2,7 @@ package com.licitacao.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.licitacao.core.UploadStorageInterface;
 import com.licitacao.responses.DropboxSharedLinkPayload;
 import com.licitacao.responses.DropboxUploadPayload;
 import com.licitacao.requests.DropboxApiArgPayload;
@@ -20,10 +21,11 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
-public class UploadFileToDropbox {
+public class UploadFileToDropbox implements UploadStorageInterface {
 
 
     private RestTemplate client;
+
     @Autowired
     private Environment env;
 
@@ -31,7 +33,7 @@ public class UploadFileToDropbox {
         this.client = new RestTemplate();
     }
 
-    public HashMap<String, String> uploadFileAndGetSharedLink(MultiValueMap<String, MultipartFile> body) throws IOException {
+    public HashMap<String, String> uploadStorage(MultiValueMap<String, MultipartFile> body) throws Exception {
         HashMap<String, String> uploadedFiles = new HashMap<>();
         for (Map.Entry<String, List<MultipartFile>> entry : body.entrySet()) {
             String path = this.uploadFile(entry.getValue().get(0), entry.getKey());

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import static java.time.temporal.TemporalAdjusters.lastDayOfYear;
@@ -39,8 +40,7 @@ public class BiddingController {
     @Autowired
     private BiddingPaginationResponse biddingPaginationResponse;
 
-
-    @PostMapping(value = "")
+    @PostMapping
     public ResponseEntity<?> save(@Valid @RequestBody BiddingRequest biddingRequest) {
         Optional<Modality> modalityOptional = this.modalityRepository.findById(biddingRequest.getModalityId());
         if (modalityOptional.isPresent()) {
@@ -50,7 +50,7 @@ public class BiddingController {
         return new ResponseEntity<>(new CustomExceptionMessage().setMessage("Modalidade não existente").setSuccess(false), HttpStatus.BAD_REQUEST);
     }
 
-    @GetMapping(value = "")
+    @GetMapping
     public ResponseEntity<?> findAll(@RequestParam Map<String, String> params) {
         int page = Integer.parseInt(params.get("page"));
         int size = Integer.parseInt(params.get("size"));
@@ -76,7 +76,7 @@ public class BiddingController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @GetMapping("/search")
+    @GetMapping("/search/")
     public ResponseEntity<?> searchBiddingQuery(
             @RequestParam(name = "initialDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> initialDate,
             @RequestParam(name = "finalDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> finalDate,

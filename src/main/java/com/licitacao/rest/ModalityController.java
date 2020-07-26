@@ -8,6 +8,7 @@ import com.licitacao.requests.ModalityRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -22,7 +23,6 @@ public class ModalityController {
     private ModalityRepository modalityRepository;
 
     @PostMapping(value = "")
-    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> save(@RequestBody @Valid ModalityRequest modalityValidator){
         Modality modality = new Modality();
         modality.setDescription(modalityValidator.getDescription());
@@ -30,7 +30,7 @@ public class ModalityController {
             return new ResponseEntity<>(new CustomExceptionMessage().setMessage("Modalidade já existente").setSuccess(false), HttpStatus.BAD_REQUEST);
         }
         this.modalityRepository.save(modality);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @GetMapping(value = "")
