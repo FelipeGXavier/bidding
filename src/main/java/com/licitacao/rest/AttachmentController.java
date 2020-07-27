@@ -1,5 +1,7 @@
 package com.licitacao.rest;
 
+import com.licitacao.core.StorageFactory;
+import com.licitacao.core.StorageType;
 import com.licitacao.core.UploadStorageInterface;
 import com.licitacao.domain.Attachment;
 import com.licitacao.domain.Bidding;
@@ -15,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -26,12 +29,12 @@ public class AttachmentController {
     @Autowired
     private BiddingRepository biddingRepository;
     @Autowired
-    private UploadStorageInterface storage;
+    private StorageFactory storage;
 
-    @PostMapping(value = "/{id}", consumes = "multipart/form-data")
-    public ResponseEntity<?> teste(@RequestParam MultiValueMap<String, MultipartFile> body, @PathVariable Long id) throws Exception {
-        if (biddingRepository.findById(id).isPresent()) {
-            HashMap<String, String> uploadedPaths = storage.uploadStorage(body);
+    @PostMapping(value = "/bidding/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<?> upload(@RequestParam MultiValueMap<String, MultipartFile> body, @PathVariable Long id, @RequestParam("storage") String storageType) throws Exception {
+        if (this.biddingRepository.findById(id).isPresent()) {
+            HashMap<String, String> uploadedPaths = this.storage.findStrategy(StorageType.find(storageType)).uploadStorage(body);
             List<Attachment> attachmentList = uploadedPaths.entrySet().stream().map(entry -> {
                 Attachment attachment = new Attachment();
                 attachment.setName(entry.getKey());

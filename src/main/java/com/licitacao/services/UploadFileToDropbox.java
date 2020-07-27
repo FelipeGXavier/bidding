@@ -2,6 +2,7 @@ package com.licitacao.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.licitacao.core.StorageType;
 import com.licitacao.core.UploadStorageInterface;
 import com.licitacao.responses.DropboxSharedLinkPayload;
 import com.licitacao.responses.DropboxUploadPayload;
@@ -41,6 +42,11 @@ public class UploadFileToDropbox implements UploadStorageInterface {
             uploadedFiles.put(entry.getKey(), sharedPath);
         }
         return uploadedFiles;
+    }
+
+    @Override
+    public StorageType getStrategyName() {
+        return StorageType.DROPBOX;
     }
 
     private String uploadFile(MultipartFile file, String name) throws IOException {
